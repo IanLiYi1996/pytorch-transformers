@@ -7,11 +7,10 @@ from importlib import import_module
 
 import numpy as np
 import torch
+from lightning_base import BaseTransformer, add_generic_args, generic_train
 from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, TensorDataset
-
-from lightning_base import BaseTransformer, add_generic_args, generic_train
 from utils_ner import TokenClassificationTask
 
 
@@ -173,8 +172,10 @@ class NERTransformer(BaseTransformer):
             "--max_seq_length",
             default=128,
             type=int,
-            help="The maximum total input sequence length after tokenization. Sequences longer "
-            "than this will be truncated, sequences shorter will be padded.",
+            help=(
+                "The maximum total input sequence length after tokenization. Sequences longer "
+                "than this will be truncated, sequences shorter will be padded."
+            ),
         )
 
         parser.add_argument(

@@ -20,13 +20,12 @@ from ...utils import is_sklearn_available, requires_backends
 
 
 if is_sklearn_available():
-    from sklearn.metrics import f1_score, matthews_corrcoef
-
     from scipy.stats import pearsonr, spearmanr
+    from sklearn.metrics import f1_score, matthews_corrcoef
 
 
 DEPRECATION_WARNING = (
-    "This metric will be removed from the library soon, metrics should be handled with the 🤗 Datasets "
+    "This metric will be removed from the library soon, metrics should be handled with the 🤗 Evaluate "
     "library. You can have a look at this example script for pointers: "
     "https://github.com/huggingface/transformers/blob/main/examples/pytorch/text-classification/run_glue.py"
 )

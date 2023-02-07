@@ -22,6 +22,8 @@ if is_torch_available():
 if is_tf_available():
     import tensorflow as tf
 
+    from ..tf_utils import stable_softmax
+
 logger = logging.get_logger(__name__)
 
 
@@ -30,6 +32,27 @@ class ZeroShotImageClassificationPipeline(ChunkPipeline):
     """
     Zero shot image classification pipeline using `CLIPModel`. This pipeline predicts the class of an image when you
     provide an image and a set of `candidate_labels`.
+
+    Example:
+
+    ```python
+    >>> from transformers import pipeline
+
+    >>> classifier = pipeline(model="openai/clip-vit-large-patch14")
+    >>> classifier(
+    ...     "https://huggingface.co/datasets/Narsil/image_dummy/raw/main/parrots.png",
+    ...     candidate_labels=["animals", "humans", "landscape"],
+    ... )
+    [{'score': 0.965, 'label': 'animals'}, {'score': 0.03, 'label': 'humans'}, {'score': 0.005, 'label': 'landscape'}]
+
+    >>> classifier(
+    ...     "https://huggingface.co/datasets/Narsil/image_dummy/raw/main/parrots.png",
+    ...     candidate_labels=["black and white", "photorealist", "painting"],
+    ... )
+    [{'score': 0.996, 'label': 'black and white'}, {'score': 0.003, 'label': 'photorealist'}, {'score': 0.0, 'label': 'painting'}]
+    ```
+
+    Learn more about the basics of using a pipeline in the [pipeline tutorial](../pipeline_tutorial)
 
     This image classification pipeline can currently be loaded from [`pipeline`] using the following task identifier:
     `"zero-shot-image-classification"`.
@@ -66,7 +89,7 @@ class ZeroShotImageClassificationPipeline(ChunkPipeline):
                 logits_per_image
 
         Return:
-            A list of dictionaries containing result, one dictionnary per proposed label. The dictionaries contain the
+            A list of dictionaries containing result, one dictionary per proposed label. The dictionaries contain the
             following keys:
 
             - **label** (`str`) -- The label identified by the model. It is one of the suggested `candidate_label`.
@@ -87,7 +110,7 @@ class ZeroShotImageClassificationPipeline(ChunkPipeline):
         n = len(candidate_labels)
         for i, candidate_label in enumerate(candidate_labels):
             image = load_image(image)
-            images = self.feature_extractor(images=[image], return_tensors=self.framework)
+            images = self.image_processor(images=[image], return_tensors=self.framework)
             sequence = hypothesis_template.format(candidate_label)
             inputs = self.tokenizer(sequence, return_tensors=self.framework)
             inputs["pixel_values"] = images.pixel_values
@@ -119,7 +142,7 @@ class ZeroShotImageClassificationPipeline(ChunkPipeline):
             scores = probs.tolist()
         else:
             logits = tf.concat([output["logits_per_image"] for output in model_outputs], axis=0)
-            probs = tf.nn.softmax(logits, axis=0)
+            probs = stable_softmax(logits, axis=0)
             scores = probs.numpy().tolist()
 
         result = [

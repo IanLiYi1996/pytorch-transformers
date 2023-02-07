@@ -45,7 +45,28 @@ class CamembertTokenizer(metaclass=DummyObject):
         requires_backends(self, ["sentencepiece"])
 
 
+class CpmTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
 class DebertaV2Tokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class FNetTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class GPTSw3Tokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
     def __init__(self, *args, **kwargs):
@@ -101,6 +122,13 @@ class MT5Tokenizer(metaclass=DummyObject):
         requires_backends(self, ["sentencepiece"])
 
 
+class NllbTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
 class PegasusTokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
@@ -130,6 +158,13 @@ class RemBertTokenizer(metaclass=DummyObject):
 
 
 class Speech2TextTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class SpeechT5Tokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
     def __init__(self, *args, **kwargs):

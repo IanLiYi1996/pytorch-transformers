@@ -250,7 +250,8 @@ class Trie:
         for end in offsets:
             if start > end:
                 logger.error(
-                    "There was a bug in Trie algorithm in tokenization. Attempting to recover. Please report it anyway."
+                    "There was a bug in Trie algorithm in tokenization. Attempting to recover. Please report it"
+                    " anyway."
                 )
                 continue
             elif start == end:
@@ -608,7 +609,7 @@ class PreTrainedTokenizer(PreTrainedTokenizerBase):
         return_offsets_mapping: bool = False,
         return_length: bool = False,
         verbose: bool = True,
-        **kwargs
+        **kwargs,
     ) -> BatchEncoding:
         def get_input_ids(text):
             if isinstance(text, str):
@@ -627,11 +628,13 @@ class PreTrainedTokenizer(PreTrainedTokenizerBase):
             else:
                 if is_split_into_words:
                     raise ValueError(
-                        f"Input {text} is not valid. Should be a string or a list/tuple of strings when `is_split_into_words=True`."
+                        f"Input {text} is not valid. Should be a string or a list/tuple of strings when"
+                        " `is_split_into_words=True`."
                     )
                 else:
                     raise ValueError(
-                        f"Input {text} is not valid. Should be a string, a list/tuple of strings or a list/tuple of integers."
+                        f"Input {text} is not valid. Should be a string, a list/tuple of strings or a list/tuple of"
+                        " integers."
                     )
 
         if return_offsets_mapping:
@@ -690,7 +693,7 @@ class PreTrainedTokenizer(PreTrainedTokenizerBase):
         return_offsets_mapping: bool = False,
         return_length: bool = False,
         verbose: bool = True,
-        **kwargs
+        **kwargs,
     ) -> BatchEncoding:
         def get_input_ids(text):
             if isinstance(text, str):
@@ -921,7 +924,7 @@ class PreTrainedTokenizer(PreTrainedTokenizerBase):
         skip_special_tokens: bool = False,
         clean_up_tokenization_spaces: bool = True,
         spaces_between_special_tokens: bool = True,
-        **kwargs
+        **kwargs,
     ) -> str:
         self._decode_use_source_tokenizer = kwargs.pop("use_source_tokenizer", False)
 

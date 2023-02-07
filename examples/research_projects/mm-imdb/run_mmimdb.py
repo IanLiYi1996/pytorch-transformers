@@ -30,6 +30,7 @@ from torch import nn
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
+from utils_mmimdb import ImageEncoder, JsonlDataset, collate_fn, get_image_transforms, get_mmimdb_labels
 
 import transformers
 from transformers import (
@@ -43,7 +44,6 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 from transformers.trainer_utils import is_main_process
-from utils_mmimdb import ImageEncoder, JsonlDataset, collate_fn, get_image_transforms, get_mmimdb_labels
 
 
 try:
@@ -356,8 +356,10 @@ def main():
         "--max_seq_length",
         default=128,
         type=int,
-        help="The maximum total input sequence length after tokenization. Sequences longer "
-        "than this will be truncated, sequences shorter will be padded.",
+        help=(
+            "The maximum total input sequence length after tokenization. Sequences longer "
+            "than this will be truncated, sequences shorter will be padded."
+        ),
     )
     parser.add_argument(
         "--num_image_embeds", default=1, type=int, help="Number of Image Embeddings from the Image Encoder"
@@ -423,8 +425,10 @@ def main():
         "--fp16_opt_level",
         type=str,
         default="O1",
-        help="For fp16: Apex AMP optimization level selected in ['O0', 'O1', 'O2', and 'O3']."
-        "See details at https://nvidia.github.io/apex/amp.html",
+        help=(
+            "For fp16: Apex AMP optimization level selected in ['O0', 'O1', 'O2', and 'O3']."
+            "See details at https://nvidia.github.io/apex/amp.html"
+        ),
     )
     parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
     parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")

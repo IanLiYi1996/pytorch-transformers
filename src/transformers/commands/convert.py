@@ -46,8 +46,7 @@ class ConvertCommand(BaseTransformersCLICommand):
         """
         train_parser = parser.add_parser(
             "convert",
-            help="CLI tool to run convert model from original "
-            "author checkpoints to Transformers PyTorch checkpoints.",
+            help="CLI tool to run convert model from original author checkpoints to Transformers PyTorch checkpoints.",
         )
         train_parser.add_argument("--model_type", type=str, required=True, help="Model's type.")
         train_parser.add_argument(
@@ -72,7 +71,7 @@ class ConvertCommand(BaseTransformersCLICommand):
         pytorch_dump_output: str,
         config: str,
         finetuning_task_name: str,
-        *args
+        *args,
     ):
         self._logger = logging.get_logger("transformers-cli/converting")
 

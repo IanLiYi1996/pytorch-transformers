@@ -35,16 +35,40 @@ PATH_TO_DOC = "docs/source/en"
 
 # Update this list with models that are supposed to be private.
 PRIVATE_MODELS = [
+    "AltRobertaModel",
     "DPRSpanPredictor",
+    "LongT5Stack",
     "RealmBertModel",
     "T5Stack",
+    "MT5Stack",
+    "SwitchTransformersStack",
     "TFDPRSpanPredictor",
+    "MaskFormerSwinModel",
+    "MaskFormerSwinPreTrainedModel",
+    "BridgeTowerTextModel",
+    "BridgeTowerVisionModel",
 ]
 
 # Update this list for models that are not tested with a comment explaining the reason it should not be.
 # Being in this list is an exception and should **not** be the rule.
 IGNORE_NON_TESTED = PRIVATE_MODELS.copy() + [
     # models to ignore for not tested
+    "DetaEncoder",  # Building part of bigger (tested) model.
+    "DetaDecoder",  # Building part of bigger (tested) model.
+    "GraphormerEncoder",  # Building part of bigger (tested) model.
+    "GraphormerDecoderHead",  # Building part of bigger (tested) model.
+    "CLIPSegDecoder",  # Building part of bigger (tested) model.
+    "TableTransformerEncoder",  # Building part of bigger (tested) model.
+    "TableTransformerDecoder",  # Building part of bigger (tested) model.
+    "TimeSeriesTransformerEncoder",  # Building part of bigger (tested) model.
+    "TimeSeriesTransformerDecoder",  # Building part of bigger (tested) model.
+    "JukeboxVQVAE",  # Building part of bigger (tested) model.
+    "JukeboxPrior",  # Building part of bigger (tested) model.
+    "DeformableDetrEncoder",  # Building part of bigger (tested) model.
+    "DeformableDetrDecoder",  # Building part of bigger (tested) model.
+    "OPTDecoder",  # Building part of bigger (tested) model.
+    "WhisperDecoder",  # Building part of bigger (tested) model.
+    "WhisperEncoder",  # Building part of bigger (tested) model.
     "DecisionTransformerGPT2Model",  # Building part of bigger (tested) model.
     "SegformerDecodeHead",  # Building part of bigger (tested) model.
     "PLBartEncoder",  # Building part of bigger (tested) model.
@@ -56,8 +80,11 @@ IGNORE_NON_TESTED = PRIVATE_MODELS.copy() + [
     "DetrEncoder",  # Building part of bigger (tested) model.
     "DetrDecoder",  # Building part of bigger (tested) model.
     "DetrDecoderWrapper",  # Building part of bigger (tested) model.
+    "ConditionalDetrEncoder",  # Building part of bigger (tested) model.
+    "ConditionalDetrDecoder",  # Building part of bigger (tested) model.
     "M2M100Encoder",  # Building part of bigger (tested) model.
     "M2M100Decoder",  # Building part of bigger (tested) model.
+    "MCTCTEncoder",  # Building part of bigger (tested) model.
     "Speech2TextEncoder",  # Building part of bigger (tested) model.
     "Speech2TextDecoder",  # Building part of bigger (tested) model.
     "LEDEncoder",  # Building part of bigger (tested) model.
@@ -75,8 +102,13 @@ IGNORE_NON_TESTED = PRIVATE_MODELS.copy() + [
     "MegatronBertEncoder",  # Building part of bigger (tested) model.
     "MegatronBertDecoder",  # Building part of bigger (tested) model.
     "MegatronBertDecoderWrapper",  # Building part of bigger (tested) model.
+    "MvpDecoderWrapper",  # Building part of bigger (tested) model.
+    "MvpEncoder",  # Building part of bigger (tested) model.
     "PegasusEncoder",  # Building part of bigger (tested) model.
     "PegasusDecoderWrapper",  # Building part of bigger (tested) model.
+    "PegasusXEncoder",  # Building part of bigger (tested) model.
+    "PegasusXDecoder",  # Building part of bigger (tested) model.
+    "PegasusXDecoderWrapper",  # Building part of bigger (tested) model.
     "DPREncoder",  # Building part of bigger (tested) model.
     "ProphetNetDecoderWrapper",  # Building part of bigger (tested) model.
     "RealmBertModel",  # Building part of bigger (tested) model.
@@ -88,41 +120,88 @@ IGNORE_NON_TESTED = PRIVATE_MODELS.copy() + [
     "TFDPREncoder",  # Building part of bigger (tested) model.
     "TFElectraMainLayer",  # Building part of bigger (tested) model (should it be a TFPreTrainedModel ?)
     "TFRobertaForMultipleChoice",  # TODO: fix
+    "TFRobertaPreLayerNormForMultipleChoice",  # TODO: fix
     "TrOCRDecoderWrapper",  # Building part of bigger (tested) model.
+    "TFWhisperEncoder",  # Building part of bigger (tested) model.
+    "TFWhisperDecoder",  # Building part of bigger (tested) model.
     "SeparableConv1D",  # Building part of bigger (tested) model.
     "FlaxBartForCausalLM",  # Building part of bigger (tested) model.
+    "FlaxBertForCausalLM",  # Building part of bigger (tested) model. Tested implicitly through FlaxRobertaForCausalLM.
+    "OPTDecoderWrapper",
+    "TFSegformerDecodeHead",  # Not a regular model.
+    "AltRobertaModel",  # Building part of bigger (tested) model.
+    "BlipTextLMHeadModel",  # No need to test it as it is tested by BlipTextVision models
+    "BridgeTowerTextModel",  # No need to test it as it is tested by BridgeTowerModel model.
+    "BridgeTowerVisionModel",  # No need to test it as it is tested by BridgeTowerModel model.
+    "SpeechT5Decoder",  # Building part of bigger (tested) model.
+    "SpeechT5DecoderWithoutPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5DecoderWithSpeechPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5DecoderWithTextPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5Encoder",  # Building part of bigger (tested) model.
+    "SpeechT5EncoderWithoutPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5EncoderWithSpeechPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5EncoderWithTextPrenet",  # Building part of bigger (tested) model.
+    "SpeechT5SpeechDecoder",  # Building part of bigger (tested) model.
+    "SpeechT5SpeechEncoder",  # Building part of bigger (tested) model.
+    "SpeechT5TextDecoder",  # Building part of bigger (tested) model.
+    "SpeechT5TextEncoder",  # Building part of bigger (tested) model.
 ]
 
 # Update this list with test files that don't have a tester with a `all_model_classes` variable and which don't
 # trigger the common tests.
 TEST_FILES_WITH_NO_COMMON_TESTS = [
-    "decision_transformer/test_modeling_decision_transformer.py",
-    "camembert/test_modeling_camembert.py",
-    "mt5/test_modeling_flax_mt5.py",
-    "mbart/test_modeling_mbart.py",
-    "mt5/test_modeling_mt5.py",
-    "pegasus/test_modeling_pegasus.py",
-    "camembert/test_modeling_tf_camembert.py",
-    "mt5/test_modeling_tf_mt5.py",
-    "xlm_roberta/test_modeling_tf_xlm_roberta.py",
-    "xlm_roberta/test_modeling_flax_xlm_roberta.py",
-    "xlm_prophetnet/test_modeling_xlm_prophetnet.py",
-    "xlm_roberta/test_modeling_xlm_roberta.py",
-    "vision_text_dual_encoder/test_modeling_vision_text_dual_encoder.py",
-    "vision_text_dual_encoder/test_modeling_flax_vision_text_dual_encoder.py",
-    "decision_transformer/test_modeling_decision_transformer.py",
+    "models/decision_transformer/test_modeling_decision_transformer.py",
+    "models/camembert/test_modeling_camembert.py",
+    "models/mt5/test_modeling_flax_mt5.py",
+    "models/mbart/test_modeling_mbart.py",
+    "models/mt5/test_modeling_mt5.py",
+    "models/pegasus/test_modeling_pegasus.py",
+    "models/camembert/test_modeling_tf_camembert.py",
+    "models/mt5/test_modeling_tf_mt5.py",
+    "models/xlm_roberta/test_modeling_tf_xlm_roberta.py",
+    "models/xlm_roberta/test_modeling_flax_xlm_roberta.py",
+    "models/xlm_prophetnet/test_modeling_xlm_prophetnet.py",
+    "models/xlm_roberta/test_modeling_xlm_roberta.py",
+    "models/vision_text_dual_encoder/test_modeling_vision_text_dual_encoder.py",
+    "models/vision_text_dual_encoder/test_modeling_flax_vision_text_dual_encoder.py",
+    "models/decision_transformer/test_modeling_decision_transformer.py",
 ]
 
 # Update this list for models that are not in any of the auto MODEL_XXX_MAPPING. Being in this list is an exception and
 # should **not** be the rule.
 IGNORE_NON_AUTO_CONFIGURED = PRIVATE_MODELS.copy() + [
     # models to ignore for model xxx mapping
+    "GitVisionModel",
+    "GraphormerModel",
+    "GraphormerForGraphClassification",
+    "BlipForConditionalGeneration",
+    "BlipForImageTextRetrieval",
+    "BlipForQuestionAnswering",
+    "BlipVisionModel",
+    "BlipTextLMHeadModel",
+    "BlipTextModel",
+    "Swin2SRForImageSuperResolution",
+    "BridgeTowerForImageAndTextRetrieval",
+    "BridgeTowerForMaskedLM",
+    "CLIPSegForImageSegmentation",
+    "CLIPSegVisionModel",
+    "CLIPSegTextModel",
+    "EsmForProteinFolding",
+    "TimeSeriesTransformerForPrediction",
+    "JukeboxVQVAE",
+    "JukeboxPrior",
+    "PegasusXEncoder",
+    "PegasusXDecoder",
+    "PegasusXDecoderWrapper",
+    "PegasusXEncoder",
+    "PegasusXDecoder",
+    "PegasusXDecoderWrapper",
     "DPTForDepthEstimation",
     "DecisionTransformerGPT2Model",
     "GLPNForDepthEstimation",
-    "ViltForQuestionAnswering",
     "ViltForImagesAndTextClassification",
     "ViltForImageAndTextRetrieval",
+    "ViltForTokenClassification",
     "ViltForMaskedLM",
     "XGLMEncoder",
     "XGLMDecoder",
@@ -130,27 +209,46 @@ IGNORE_NON_AUTO_CONFIGURED = PRIVATE_MODELS.copy() + [
     "PerceiverForMultimodalAutoencoding",
     "PerceiverForOpticalFlow",
     "SegformerDecodeHead",
+    "TFSegformerDecodeHead",
     "FlaxBeitForMaskedImageModeling",
     "PLBartEncoder",
     "PLBartDecoder",
     "PLBartDecoderWrapper",
     "BeitForMaskedImageModeling",
+    "ChineseCLIPTextModel",
+    "ChineseCLIPVisionModel",
     "CLIPTextModel",
+    "CLIPTextModelWithProjection",
     "CLIPVisionModel",
+    "CLIPVisionModelWithProjection",
+    "GroupViTTextModel",
+    "GroupViTVisionModel",
     "TFCLIPTextModel",
     "TFCLIPVisionModel",
+    "TFGroupViTTextModel",
+    "TFGroupViTVisionModel",
     "FlaxCLIPTextModel",
     "FlaxCLIPVisionModel",
     "FlaxWav2Vec2ForCTC",
     "DetrForSegmentation",
+    "ConditionalDetrForSegmentation",
     "DPRReader",
     "FlaubertForQuestionAnswering",
+    "FlavaImageCodebook",
+    "FlavaTextModel",
+    "FlavaImageModel",
+    "FlavaMultimodalModel",
     "GPT2DoubleHeadsModel",
+    "GPTSw3DoubleHeadsModel",
+    "LayoutLMForQuestionAnswering",
     "LukeForMaskedLM",
     "LukeForEntityClassification",
     "LukeForEntityPairClassification",
     "LukeForEntitySpanClassification",
     "OpenAIGPTDoubleHeadsModel",
+    "OwlViTTextModel",
+    "OwlViTVisionModel",
+    "OwlViTForObjectDetection",
     "RagModel",
     "RagSequenceForGeneration",
     "RagTokenForGeneration",
@@ -160,6 +258,7 @@ IGNORE_NON_AUTO_CONFIGURED = PRIVATE_MODELS.copy() + [
     "RealmReader",
     "TFDPRReader",
     "TFGPT2DoubleHeadsModel",
+    "TFLayoutLMForQuestionAnswering",
     "TFOpenAIGPTDoubleHeadsModel",
     "TFRagModel",
     "TFRagSequenceForGeneration",
@@ -177,7 +276,14 @@ IGNORE_NON_AUTO_CONFIGURED = PRIVATE_MODELS.copy() + [
     "VisualBertForMultipleChoice",
     "TFWav2Vec2ForCTC",
     "TFHubertForCTC",
-    "MaskFormerForInstanceSegmentation",
+    "XCLIPVisionModel",
+    "XCLIPTextModel",
+    "AltCLIPTextModel",
+    "AltCLIPVisionModel",
+    "AltRobertaModel",
+    "SpeechT5ForSpeechToSpeech",
+    "SpeechT5ForTextToSpeech",
+    "SpeechT5HifiGan",
 ]
 
 # Update this list for models that have multiple model types for the same
@@ -186,6 +292,8 @@ MODEL_TYPE_TO_DOC_MAPPING = OrderedDict(
     [
         ("data2vec-text", "data2vec"),
         ("data2vec-audio", "data2vec"),
+        ("data2vec-vision", "data2vec"),
+        ("donut-swin", "donut"),
     ]
 )
 
@@ -285,6 +393,8 @@ def is_a_private_model(model):
         return True
     if model.endswith("Decoder"):
         return True
+    if model.endswith("Prenet"):
+        return True
     return False
 
 
@@ -306,7 +416,12 @@ def check_models_are_in_init():
 # If some test_modeling files should be ignored when checking models are all tested, they should be added in the
 # nested list _ignore_files of this function.
 def get_model_test_files():
-    """Get the model test files."""
+    """Get the model test files.
+
+    The returned files should NOT contain the `tests` (i.e. `PATH_TO_TESTS` defined in this script). They will be
+    considered as paths relative to `tests`. A caller has to use `os.path.join(PATH_TO_TESTS, ...)` to access the files.
+    """
+
     _ignore_files = [
         "test_modeling_common",
         "test_modeling_encoder_decoder",
@@ -317,20 +432,23 @@ def get_model_test_files():
         "test_modeling_tf_encoder_decoder",
     ]
     test_files = []
-    for file_or_dir in os.listdir(PATH_TO_TESTS):
-        path = os.path.join(PATH_TO_TESTS, file_or_dir)
-        if os.path.isdir(path):
-            filenames = [os.path.join(file_or_dir, file) for file in os.listdir(path)]
-        else:
-            filenames = [file_or_dir]
+    # Check both `PATH_TO_TESTS` and `PATH_TO_TESTS/models`
+    model_test_root = os.path.join(PATH_TO_TESTS, "models")
+    model_test_dirs = []
+    for x in os.listdir(model_test_root):
+        x = os.path.join(model_test_root, x)
+        if os.path.isdir(x):
+            model_test_dirs.append(x)
 
-        for filename in filenames:
-            if (
-                os.path.isfile(os.path.join(PATH_TO_TESTS, filename))
-                and "test_modeling" in filename
-                and not os.path.splitext(filename)[0] in _ignore_files
-            ):
-                test_files.append(filename)
+    for target_dir in [PATH_TO_TESTS] + model_test_dirs:
+        for file_or_dir in os.listdir(target_dir):
+            path = os.path.join(target_dir, file_or_dir)
+            if os.path.isfile(path):
+                filename = os.path.split(path)[-1]
+                if "test_modeling" in filename and os.path.splitext(filename)[0] not in _ignore_files:
+                    file = os.path.join(*path.split(os.sep)[1:])
+                    test_files.append(file)
+
     return test_files
 
 
@@ -360,7 +478,7 @@ def check_models_are_tested(module, test_file):
     defined_models = get_models(module)
     tested_models = find_tested_models(test_file)
     if tested_models is None:
-        if test_file in TEST_FILES_WITH_NO_COMMON_TESTS:
+        if test_file.replace(os.path.sep, "/") in TEST_FILES_WITH_NO_COMMON_TESTS:
             return
         return [
             f"{test_file} should define `all_model_classes` to apply common tests to the models it tests. "
@@ -392,9 +510,9 @@ def check_all_models_are_tested():
             failures.append(f"{module.__name__} has several test files: {test_file}.")
         else:
             test_file = test_file[0]
-        new_failures = check_models_are_tested(module, test_file)
-        if new_failures is not None:
-            failures += new_failures
+            new_failures = check_models_are_tested(module, test_file)
+            if new_failures is not None:
+                failures += new_failures
     if len(failures) > 0:
         raise Exception(f"There were {len(failures)} failures:\n" + "\n".join(failures))
 
@@ -508,7 +626,8 @@ def check_all_decorator_order():
     if len(errors) > 0:
         msg = "\n".join(errors)
         raise ValueError(
-            f"The parameterized decorator (and its variants) should always be first, but this is not the case in the following files:\n{msg}"
+            "The parameterized decorator (and its variants) should always be first, but this is not the case in the"
+            f" following files:\n{msg}"
         )
 
 
@@ -585,11 +704,11 @@ UNDOCUMENTED_OBJECTS = [
     "absl",  # External module
     "add_end_docstrings",  # Internal, should never have been in the main init.
     "add_start_docstrings",  # Internal, should never have been in the main init.
-    "cached_path",  # Internal used for downloading models.
     "convert_tf_weight_name_to_pt_weight_name",  # Internal used to convert model weights
     "logger",  # Internal logger
     "logging",  # External module
     "requires_backends",  # Internal function
+    "AltRobertaModel",  # Internal module
 ]
 
 # This list should be empty. Objects in it should get their own doc page.
@@ -599,6 +718,16 @@ SHOULD_HAVE_THEIR_OWN_PAGE = [
     "PyTorchBenchmarkArguments",
     "TensorFlowBenchmark",
     "TensorFlowBenchmarkArguments",
+    "AutoBackbone",
+    "BitBackbone",
+    "ConvNextBackbone",
+    "DinatBackbone",
+    "MaskFormerSwinBackbone",
+    "MaskFormerSwinConfig",
+    "MaskFormerSwinModel",
+    "NatBackbone",
+    "ResNetBackbone",
+    "SwinBackbone",
 ]
 
 
@@ -707,7 +836,7 @@ def check_docstrings_are_in_md():
     """Check all docstrings are in md"""
     files_with_rst = []
     for file in Path(PATH_TO_TRANSFORMERS).glob("**/*.py"):
-        with open(file, "r") as f:
+        with open(file, encoding="utf-8") as f:
             code = f.read()
         docstrings = code.split('"""')
 

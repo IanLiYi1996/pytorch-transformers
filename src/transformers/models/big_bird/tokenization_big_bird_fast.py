@@ -35,13 +35,23 @@ VOCAB_FILES_NAMES = {"vocab_file": "spiece.model", "tokenizer_file": "tokenizer.
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
         "google/bigbird-roberta-base": "https://huggingface.co/google/bigbird-roberta-base/resolve/main/spiece.model",
-        "google/bigbird-roberta-large": "https://huggingface.co/google/bigbird-roberta-large/resolve/main/spiece.model",
-        "google/bigbird-base-trivia-itc": "https://huggingface.co/google/bigbird-base-trivia-itc/resolve/main/spiece.model",
+        "google/bigbird-roberta-large": (
+            "https://huggingface.co/google/bigbird-roberta-large/resolve/main/spiece.model"
+        ),
+        "google/bigbird-base-trivia-itc": (
+            "https://huggingface.co/google/bigbird-base-trivia-itc/resolve/main/spiece.model"
+        ),
     },
     "tokenizer_file": {
-        "google/bigbird-roberta-base": "https://huggingface.co/google/bigbird-roberta-base/resolve/main/tokenizer.json",
-        "google/bigbird-roberta-large": "https://huggingface.co/google/bigbird-roberta-large/resolve/main/tokenizer.json",
-        "google/bigbird-base-trivia-itc": "https://huggingface.co/google/bigbird-base-trivia-itc/resolve/main/tokenizer.json",
+        "google/bigbird-roberta-base": (
+            "https://huggingface.co/google/bigbird-roberta-base/resolve/main/tokenizer.json"
+        ),
+        "google/bigbird-roberta-large": (
+            "https://huggingface.co/google/bigbird-roberta-large/resolve/main/tokenizer.json"
+        ),
+        "google/bigbird-base-trivia-itc": (
+            "https://huggingface.co/google/bigbird-base-trivia-itc/resolve/main/tokenizer.json"
+        ),
     },
 }
 
@@ -114,7 +124,7 @@ class BigBirdTokenizerFast(PreTrainedTokenizerFast):
         sep_token="[SEP]",
         mask_token="[MASK]",
         cls_token="[CLS]",
-        **kwargs
+        **kwargs,
     ):
         bos_token = AddedToken(bos_token, lstrip=False, rstrip=False) if isinstance(bos_token, str) else bos_token
         eos_token = AddedToken(eos_token, lstrip=False, rstrip=False) if isinstance(eos_token, str) else eos_token

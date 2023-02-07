@@ -16,12 +16,11 @@ import unittest
 
 from transformers import MODEL_FOR_MASKED_LM_MAPPING, TF_MODEL_FOR_MASKED_LM_MAPPING, FillMaskPipeline, pipeline
 from transformers.pipelines import PipelineException
-from transformers.testing_utils import is_pipeline_test, nested_simplify, require_tf, require_torch, slow
+from transformers.testing_utils import nested_simplify, require_tf, require_torch, require_torch_gpu, slow
 
 from .test_pipelines_common import ANY, PipelineTestCaseMeta
 
 
-@is_pipeline_test
 class FillMaskPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
     model_mapping = MODEL_FOR_MASKED_LM_MAPPING
     tf_model_mapping = TF_MODEL_FOR_MASKED_LM_MAPPING
@@ -130,6 +129,19 @@ class FillMaskPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
             ],
         )
 
+    @require_torch_gpu
+    def test_fp16_casting(self):
+        pipe = pipeline("fill-mask", model="hf-internal-testing/tiny-random-distilbert", device=0, framework="pt")
+
+        # convert model to fp16
+        pipe.model.half()
+
+        response = pipe("Paris is the [MASK] of France.")
+        # We actually don't care about the result, we just want to make sure
+        # it works, meaning the float16 tensor got casted back to float32
+        # for postprocessing.
+        self.assertIsInstance(response, list)
+
     @slow
     @require_torch
     def test_large_model_pt(self):
@@ -194,7 +206,7 @@ class FillMaskPipelineTests(unittest.TestCase, metaclass=PipelineTestCaseMeta):
         unmasker.tokenizer.pad_token = None
         self.run_pipeline_test(unmasker, [])
 
-    def get_test_pipeline(self, model, tokenizer, feature_extractor):
+    def get_test_pipeline(self, model, tokenizer, processor):
         if tokenizer is None or tokenizer.mask_token_id is None:
             self.skipTest("The provided tokenizer has no mask token, (probably reformer or wav2vec2)")
 

@@ -41,7 +41,6 @@ from .configuration_prophetnet import ProphetNetConfig
 logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "ProphenetConfig"
-_TOKENIZER_FOR_DOC = "ProphetNetTokenizer"
 _CHECKPOINT_FOR_DOC = "microsoft/prophetnet-large-uncased"
 
 PROPHETNET_PRETRAINED_MODEL_ARCHIVE_LIST = [
@@ -75,7 +74,7 @@ PROPHETNET_INPUTS_DOCSTRING = r"""
             Indices of input sequence tokens in the vocabulary. Padding will be ignored by default should you provide
             it.
 
-            Indices can be obtained using [`ProphetNetTokenizer`]. See [`PreTrainedTokenizer.encode`] and
+            Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`] and
             [`PreTrainedTokenizer.__call__`] for details.
 
             [What are input IDs?](../glossary#input-ids)
@@ -89,7 +88,7 @@ PROPHETNET_INPUTS_DOCSTRING = r"""
         decoder_input_ids (`torch.LongTensor` of shape `(batch_size, target_sequence_length)`, *optional*):
             Indices of decoder input sequence tokens in the vocabulary.
 
-            Indices can be obtained using [`ProphetNetTokenizer`]. See [`PreTrainedTokenizer.encode`] and
+            Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`] and
             [`PreTrainedTokenizer.__call__`] for details.
 
             [What are decoder input IDs?](../glossary#decoder-input-ids)
@@ -148,7 +147,7 @@ PROPHETNET_STANDALONE_INPUTS_DOCSTRING = r"""
             Indices of input sequence tokens in the vocabulary. Padding will be ignored by default should you provide
             it.
 
-            Indices can be obtained using [`ProphetNetTokenizer`]. See [`PreTrainedTokenizer.encode`] and
+            Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`] and
             [`PreTrainedTokenizer.__call__`] for details.
 
             [What are input IDs?](../glossary#input-ids)
@@ -187,7 +186,9 @@ def ngram_attention_bias(sequence_length, ngram, device, dtype):
     """
     This function computes the bias for the predict stream
     """
-    left_block = torch.ones((ngram, sequence_length, sequence_length), device=device, dtype=dtype) * float("-inf")
+    left_block = (
+        torch.ones((ngram, sequence_length, sequence_length), device=device, dtype=dtype) * torch.finfo(dtype).min
+    )
     right_block = left_block.detach().clone()
     # create bias
     for stream_idx in range(ngram):
@@ -326,7 +327,8 @@ class ProphetNetSeq2SeqLMOutput(ModelOutput):
     @property
     def decoder_cross_attentions(self):
         warnings.warn(
-            "`decoder_cross_attentions` is deprecated and will be removed soon. Please use `cross_attentions` instead.",
+            "`decoder_cross_attentions` is deprecated and will be removed soon. Please use `cross_attentions`"
+            " instead.",
             FutureWarning,
         )
         return self.cross_attentions
@@ -344,7 +346,7 @@ class ProphetNetSeq2SeqModelOutput(ModelOutput):
 
             If `past_key_values` is used only the last hidden-state of the sequences of shape `(batch_size, 1,
             hidden_size)` is output.
-        last_hidden_state_ngram (`torch.FloatTensor` of shape `(batch_size,ngram * decoder_sequence_length, config.vocab_size)`):
+        last_hidden_state_ngram (`torch.FloatTensor` of shape `(batch_size,ngram * decoder_sequence_length, config.vocab_size)`, *optional*):
             Sequence of predict stream hidden-states at the output of the last layer of the decoder of the model.
         past_key_values (`List[torch.FloatTensor]`, *optional*, returned when `use_cache=True` is passed or when `config.use_cache=True`):
             List of `torch.FloatTensor` of length `config.n_layers`, with each tensor of shape `(2, batch_size,
@@ -411,7 +413,8 @@ class ProphetNetSeq2SeqModelOutput(ModelOutput):
     @property
     def decoder_cross_attentions(self):
         warnings.warn(
-            "`decoder_cross_attentions` is deprecated and will be removed soon. Please use `cross_attentions` instead.",
+            "`decoder_cross_attentions` is deprecated and will be removed soon. Please use `cross_attentions`"
+            " instead.",
             FutureWarning,
         )
         return self.cross_attentions
@@ -562,9 +565,10 @@ class ProphetNetPreTrainedModel(PreTrainedModel):
         decoder_start_token_id = self.config.decoder_start_token_id
         pad_token_id = self.config.pad_token_id
 
-        assert (
-            decoder_start_token_id is not None
-        ), "self.model.config.decoder_start_token_id has to be defined. In ProphetNet it is usually set to the pad_token_id. See ProphetNet docs for more information"
+        assert decoder_start_token_id is not None, (
+            "self.model.config.decoder_start_token_id has to be defined. In ProphetNet it is usually set to the"
+            " pad_token_id. See ProphetNet docs for more information"
+        )
 
         # shift inputs to the right
         shifted_input_ids = input_ids.new_zeros(input_ids.shape)
@@ -587,7 +591,7 @@ class ProphetNetPositionalEmbeddings(nn.Embedding):
     the forward function.
     """
 
-    def __init__(self, config: ProphetNetConfig):
+    def __init__(self, config: ProphetNetConfig) -> None:
         self.max_length = config.max_position_embeddings
         super().__init__(config.max_position_embeddings, config.hidden_size, config.pad_token_id)
 
@@ -639,9 +643,10 @@ class ProphetNetAttention(nn.Module):
         self.num_attn_heads = num_attn_heads
         self.head_dim = hidden_size // num_attn_heads
 
-        assert (
-            self.head_dim * num_attn_heads == hidden_size
-        ), "`config.hidden_size` must be divisible by `config.num_encoder_attention_heads` and `config.num_decoder_attention_heads`"
+        assert self.head_dim * num_attn_heads == hidden_size, (
+            "`config.hidden_size` must be divisible by `config.num_encoder_attention_heads` and"
+            " `config.num_decoder_attention_heads`"
+        )
 
         self.key_proj = nn.Linear(hidden_size, hidden_size)
         self.value_proj = nn.Linear(hidden_size, hidden_size)
@@ -661,7 +666,6 @@ class ProphetNetAttention(nn.Module):
         past_key_value: Optional[Tuple[Tensor]] = None,
         output_attentions: bool = False,
     ) -> Tuple[Tensor, Optional[Tensor]]:
-
         batch_size, tgt_len, hidden_size = hidden_states.size()
 
         # if key_value_states are provided this layer is used as a cross-attention layer
@@ -708,7 +712,10 @@ class ProphetNetAttention(nn.Module):
             batch_size * self.num_attn_heads,
             tgt_len,
             src_len,
-        ), f"`attn_weights` should be of size {batch_size * self.num_attn_heads, tgt_len, src_len}, but is of size {attn_weights.shape}"
+        ), (
+            f"`attn_weights` should be of size {batch_size * self.num_attn_heads, tgt_len, src_len}, but is of size"
+            f" {attn_weights.shape}"
+        )
 
         # This is part of a workaround to get around fork/join parallelism not supporting Optional types.
         if attention_mask is not None and attention_mask.dim() == 0:
@@ -717,7 +724,10 @@ class ProphetNetAttention(nn.Module):
             self.num_attn_heads * batch_size,
             1,
             src_len,
-        ), f"`attention_mask` should be `None` or of shape attention_mask.size() == {batch_size * self.num_attn_heads, 1, src_len}, but is {attention_mask.shape}"
+        ), (
+            "`attention_mask` should be `None` or of shape attention_mask.size() =="
+            f" {batch_size * self.num_attn_heads, 1, src_len}, but is {attention_mask.shape}"
+        )
 
         if attention_mask is not None:  # don't attend to padding symbols
             attn_weights = attn_weights + attention_mask
@@ -735,9 +745,10 @@ class ProphetNetAttention(nn.Module):
         attn_weights = nn.functional.softmax(attn_weights, dim=-1)
 
         if layer_head_mask is not None:
-            assert layer_head_mask.size() == (
-                self.num_attn_heads,
-            ), f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is {layer_head_mask.size()}"
+            assert layer_head_mask.size() == (self.num_attn_heads,), (
+                f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is"
+                f" {layer_head_mask.size()}"
+            )
             attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(
                 batch_size, self.num_attn_heads, tgt_len, src_len
             )
@@ -757,7 +768,10 @@ class ProphetNetAttention(nn.Module):
             batch_size * self.num_attn_heads,
             tgt_len,
             self.head_dim,
-        ), "`attn_output` should be of shape {batch_size * self.num_attn_heads, tgt_len, self.head_dim}, but is of shape {attn_output.size()}"
+        ), (
+            f"`attn_output` should be of shape {batch_size * self.num_attn_heads, tgt_len, self.head_dim}, but is of"
+            f" shape {attn_output.size()}"
+        )
 
         attn_output = (
             attn_output.view(batch_size, self.num_attn_heads, tgt_len, self.head_dim)
@@ -843,11 +857,10 @@ class ProphetNetNgramSelfAttention(nn.Module):
     ):
         batch_size, ngram_sequence_length, hidden_size = hidden_states.size()
 
-        assert list(hidden_states.size()) == [
-            batch_size,
-            ngram_sequence_length,
-            hidden_size,
-        ], f"`hidden_states` should be of shape {batch_size, ngram_sequence_length, hidden_size}, but is of shape {hidden_states.shape}"
+        assert list(hidden_states.size()) == [batch_size, ngram_sequence_length, hidden_size], (
+            f"`hidden_states` should be of shape {batch_size, ngram_sequence_length, hidden_size}, but is of shape"
+            f" {hidden_states.shape}"
+        )
 
         # project
         query_states = self.query_proj(hidden_states)
@@ -916,9 +929,10 @@ class ProphetNetNgramSelfAttention(nn.Module):
         ).type_as(main_attn_weights)
 
         if layer_head_mask is not None:
-            assert layer_head_mask.size() == (
-                self.num_attn_heads,
-            ), f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is {layer_head_mask.size()}"
+            assert layer_head_mask.size() == (self.num_attn_heads,), (
+                f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is"
+                f" {layer_head_mask.size()}"
+            )
             main_attn_probs = layer_head_mask.view(1, -1, 1, 1) * main_attn_probs.view(
                 batch_size, self.num_attn_heads, -1, sequence_length
             )
@@ -979,9 +993,10 @@ class ProphetNetNgramSelfAttention(nn.Module):
         ).type_as(predict_attn_weights)
 
         if layer_head_mask is not None:
-            assert layer_head_mask.size() == (
-                self.num_attn_heads,
-            ), f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is {layer_head_mask.size()}"
+            assert layer_head_mask.size() == (self.num_attn_heads,), (
+                f"Head mask for a single layer should be of size {(self.num_attn_heads,)}, but is"
+                f" {layer_head_mask.size()}"
+            )
             predict_attn_probs = layer_head_mask.view(1, 1, -1, 1, 1) * predict_attn_probs.view(
                 self.ngram, batch_size, self.num_attn_heads, sequence_length, 2 * sequence_length
             )
@@ -1289,10 +1304,10 @@ class ProphetNetEncoder(ProphetNetPreTrainedModel):
         Example:
 
         ```python
-        >>> from transformers import ProphetNetTokenizer, ProphetNetEncoder
+        >>> from transformers import AutoTokenizer, ProphetNetEncoder
         >>> import torch
 
-        >>> tokenizer = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = ProphetNetEncoder.from_pretrained("patrickvonplaten/prophetnet-large-uncased-standalone")
         >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
         >>> outputs = model(**inputs)
@@ -1317,7 +1332,7 @@ class ProphetNetEncoder(ProphetNetPreTrainedModel):
         if attention_mask is not None:
             extended_attention_mask = (
                 1.0 - attention_mask[:, None, :].repeat(self.config.num_encoder_attention_heads, 1, 1)
-            ) * -10000.0
+            ) * torch.finfo(self.dtype).min
             extended_attention_mask = extended_attention_mask.to(inputs_embeds.dtype)
         else:
             extended_attention_mask = None
@@ -1388,7 +1403,7 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
         embeddings instead of randomly initialized word embeddings.
     """
 
-    def __init__(self, config: ProphetNetConfig, word_embeddings: nn.Embedding = None):
+    def __init__(self, config: ProphetNetConfig, word_embeddings: Optional[nn.Embedding] = None):
         super().__init__(config)
 
         self.ngram = config.ngram
@@ -1466,10 +1481,10 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
         Example:
 
         ```python
-        >>> from transformers import ProphetNetTokenizer, ProphetNetDecoder
+        >>> from transformers import AutoTokenizer, ProphetNetDecoder
         >>> import torch
 
-        >>> tokenizer = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = ProphetNetDecoder.from_pretrained("microsoft/prophetnet-large-uncased", add_cross_attention=False)
         >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
         >>> outputs = model(**inputs)
@@ -1535,7 +1550,7 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
         if encoder_attention_mask is not None:
             extended_encoder_attention_mask = (
                 1.0 - encoder_attention_mask[:, None, :].repeat(self.config.num_decoder_attention_heads, 1, 1)
-            ) * -10000.0
+            ) * torch.finfo(self.dtype).min
             extended_encoder_attention_mask = extended_encoder_attention_mask.to(inputs_embeds.dtype)
         else:
             extended_encoder_attention_mask = None
@@ -1559,9 +1574,10 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
         # check if head_mask/cross_attn_head_mask has a correct number of layers specified if desired
         for attn_mask, mask_name in zip([head_mask, cross_attn_head_mask], ["head_mask", "cross_attn_head_mask"]):
             if attn_mask is not None:
-                assert attn_mask.size()[0] == (
-                    len(self.layers)
-                ), f"The `{mask_name}` should be specified for {len(self.layers)} layers, but it is for {head_mask.size()[0]}."
+                assert attn_mask.size()[0] == (len(self.layers)), (
+                    f"The `{mask_name}` should be specified for {len(self.layers)} layers, but it is for"
+                    f" {head_mask.size()[0]}."
+                )
         for idx, decoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 # grad cannot be kept because tensor is sliced
@@ -1572,7 +1588,6 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
             past_key_value = past_key_values[idx] if past_key_values is not None else None
 
             if self.gradient_checkpointing and self.training:
-
                 if use_cache:
                     logger.warning(
                         "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
@@ -1693,7 +1708,10 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
 
         # get causal mask
         causal_mask = torch.full(
-            (seq_length, seq_length), -float("inf"), dtype=hidden_states.dtype, device=hidden_states.device
+            (seq_length, seq_length),
+            torch.finfo(hidden_states.dtype).min,
+            dtype=hidden_states.dtype,
+            device=hidden_states.device,
         )
         causal_mask = torch.triu(causal_mask, 1)
         extended_causal_mask = causal_mask[:seq_length, :seq_length][None, :, :].expand(
@@ -1702,7 +1720,7 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
 
         # add usual attention mask
         if attention_mask is not None:
-            extended_attention_mask = (1.0 - attention_mask[:, None, :]) * -10000.0
+            extended_attention_mask = (1.0 - attention_mask[:, None, :]) * torch.finfo(self.dtype).min
             extended_attention_mask = extended_causal_mask + extended_attention_mask
         else:
             extended_attention_mask = extended_causal_mask
@@ -1730,7 +1748,7 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
 
         # add usual attention mask
         if attention_mask is not None:
-            extended_attention_mask = (1.0 - attention_mask[None, :, None, :]) * -10000.0
+            extended_attention_mask = (1.0 - attention_mask[None, :, None, :]) * torch.finfo(self.dtype).min
             extended_attention_mask = extended_attention_mask.expand((self.ngram, batch_size, seq_length, seq_length))
             # predicted stream attention_mask should always be 0
             extended_attention_mask = torch.cat(
@@ -1749,7 +1767,9 @@ class ProphetNetDecoder(ProphetNetPreTrainedModel):
     PROPHETNET_START_DOCSTRING,
 )
 class ProphetNetModel(ProphetNetPreTrainedModel):
-    def __init__(self, config):
+    _keys_to_ignore_on_load_missing = ["decoder.word_embeddings.weight", "encoder.word_embeddings.weight"]
+
+    def __init__(self, config: ProphetNetConfig):
         super().__init__(config)
         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
 
@@ -1806,14 +1826,14 @@ class ProphetNetModel(ProphetNetPreTrainedModel):
         Example:
 
         ```python
-        >>> from transformers import ProphetNetTokenizer, ProphetNetModel
+        >>> from transformers import AutoTokenizer, ProphetNetModel
 
-        >>> tokenizer = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = ProphetNetModel.from_pretrained("microsoft/prophetnet-large-uncased")
 
         >>> input_ids = tokenizer(
         ...     "Studies have been shown that owning a dog is good for you", return_tensors="pt"
-        >>> ).input_ids  # Batch size 1
+        ... ).input_ids  # Batch size 1
         >>> decoder_input_ids = tokenizer("Studies show that", return_tensors="pt").input_ids  # Batch size 1
         >>> outputs = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids)
 
@@ -1876,6 +1896,12 @@ class ProphetNetModel(ProphetNetPreTrainedModel):
     PROPHETNET_START_DOCSTRING,
 )
 class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
+    _keys_to_ignore_on_load_missing = [
+        "decoder.word_embeddings.weight",
+        "encoder.word_embeddings.weight",
+        "lm_head.weight",
+    ]
+
     def __init__(self, config: ProphetNetConfig):
         super().__init__(config)
         self.prophetnet = ProphetNetModel(config)
@@ -1928,14 +1954,14 @@ class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
         Example:
 
         ```python
-        >>> from transformers import ProphetNetTokenizer, ProphetNetForConditionalGeneration
+        >>> from transformers import AutoTokenizer, ProphetNetForConditionalGeneration
 
-        >>> tokenizer = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = ProphetNetForConditionalGeneration.from_pretrained("microsoft/prophetnet-large-uncased")
 
         >>> input_ids = tokenizer(
         ...     "Studies have been shown that owning a dog is good for you", return_tensors="pt"
-        >>> ).input_ids  # Batch size 1
+        ... ).input_ids  # Batch size 1
         >>> decoder_input_ids = tokenizer("Studies show that", return_tensors="pt").input_ids  # Batch size 1
         >>> outputs = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids)
 
@@ -2033,7 +2059,7 @@ class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
     def prepare_inputs_for_generation(
         self,
         decoder_input_ids,
-        past=None,
+        past_key_values=None,
         attention_mask=None,
         head_mask=None,
         decoder_head_mask=None,
@@ -2044,13 +2070,13 @@ class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
     ):
         assert encoder_outputs is not None, "`encoder_outputs` have to be passed for generation."
 
-        if past:
+        if past_key_values:
             decoder_input_ids = decoder_input_ids[:, -1:]
         # first step, decoder_cached_states are empty
         return {
             "input_ids": None,  # encoder_outputs is defined. input_ids not needed
             "encoder_outputs": encoder_outputs,
-            "past_key_values": past,
+            "past_key_values": past_key_values,
             "decoder_input_ids": decoder_input_ids,
             "attention_mask": attention_mask,
             "head_mask": head_mask,
@@ -2064,9 +2090,9 @@ class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
 
     @staticmethod
     # Copied from transformers.models.bart.modeling_bart.BartForConditionalGeneration._reorder_cache
-    def _reorder_cache(past, beam_idx):
+    def _reorder_cache(past_key_values, beam_idx):
         reordered_past = ()
-        for layer_past in past:
+        for layer_past in past_key_values:
             # cached cross_attention states don't have to be reordered -> they are always the same
             reordered_past += (
                 tuple(past_state.index_select(0, beam_idx) for past_state in layer_past[:2]) + layer_past[2:],
@@ -2081,11 +2107,14 @@ class ProphetNetForConditionalGeneration(ProphetNetPreTrainedModel):
 
 
 @add_start_docstrings(
-    "The standalone decoder part of the ProphetNetModel with a lm head on top. The model can be used for causal language modeling.",
+    "The standalone decoder part of the ProphetNetModel with a lm head on top. The model can be used for causal"
+    " language modeling.",
     PROPHETNET_START_DOCSTRING,
 )
 class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
-    def __init__(self, config):
+    _keys_to_ignore_on_load_missing = ["lm_head.weight"]
+
+    def __init__(self, config: ProphetNetConfig):
         # set config for CLM
         config = copy.deepcopy(config)
         config.is_decoder = True
@@ -2173,10 +2202,10 @@ class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
         Example:
 
         ```python
-        >>> from transformers import ProphetNetTokenizer, ProphetNetForCausalLM
+        >>> from transformers import AutoTokenizer, ProphetNetForCausalLM
         >>> import torch
 
-        >>> tokenizer = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = ProphetNetForCausalLM.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> assert model.config.is_decoder, f"{model.__class__} has to be configured as a decoder."
         >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="pt")
@@ -2185,11 +2214,11 @@ class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
         >>> logits = outputs.logits
 
         >>> # Model can also be used with EncoderDecoder framework
-        >>> from transformers import BertTokenizer, EncoderDecoderModel, ProphetNetTokenizer
+        >>> from transformers import BertTokenizer, EncoderDecoderModel, AutoTokenizer
         >>> import torch
 
         >>> tokenizer_enc = BertTokenizer.from_pretrained("bert-large-uncased")
-        >>> tokenizer_dec = ProphetNetTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
+        >>> tokenizer_dec = AutoTokenizer.from_pretrained("microsoft/prophetnet-large-uncased")
         >>> model = EncoderDecoderModel.from_encoder_decoder_pretrained(
         ...     "bert-large-uncased", "microsoft/prophetnet-large-uncased"
         ... )
@@ -2202,7 +2231,7 @@ class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
         >>> input_ids = tokenizer_enc(ARTICLE, return_tensors="pt").input_ids
         >>> labels = tokenizer_dec(
         ...     "us rejects charges against its ambassador in bolivia", return_tensors="pt"
-        >>> ).input_ids
+        ... ).input_ids
         >>> outputs = model(input_ids=input_ids, decoder_input_ids=labels[:, :-1], labels=labels[:, 1:])
 
         >>> loss = outputs.loss
@@ -2284,7 +2313,7 @@ class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
     def prepare_inputs_for_generation(
         self,
         input_ids,
-        past=None,
+        past_key_values=None,
         attention_mask=None,
         head_mask=None,
         use_cache=None,
@@ -2294,22 +2323,22 @@ class ProphetNetForCausalLM(ProphetNetPreTrainedModel):
         if attention_mask is None:
             attention_mask = input_ids.new_ones(input_ids.shape)
 
-        if past:
+        if past_key_values:
             input_ids = input_ids[:, -1:]
         # first step, decoder_cached_states are empty
         return {
             "input_ids": input_ids,  # encoder_outputs is defined. input_ids not needed
             "attention_mask": attention_mask,
             "head_mask": head_mask,
-            "past_key_values": past,
+            "past_key_values": past_key_values,
             "use_cache": use_cache,
         }
 
     @staticmethod
     # Copied from transformers.models.bart.modeling_bart.BartForCausalLM._reorder_cache
-    def _reorder_cache(past, beam_idx):
+    def _reorder_cache(past_key_values, beam_idx):
         reordered_past = ()
-        for layer_past in past:
+        for layer_past in past_key_values:
             reordered_past += (tuple(past_state.index_select(0, beam_idx) for past_state in layer_past),)
         return reordered_past
 
@@ -2320,7 +2349,7 @@ class ProphetNetDecoderWrapper(ProphetNetPreTrainedModel):
     classes.
     """
 
-    def __init__(self, config):
+    def __init__(self, config: ProphetNetConfig):
         super().__init__(config)
         self.decoder = ProphetNetDecoder(config)
 

@@ -19,16 +19,16 @@ from pathlib import Path
 from pprint import pformat
 from typing import Any, Dict, Iterator, List, Set, Tuple
 
+import requests
 import torch
 import torchvision.transforms as T
-from PIL import Image
-from torch import Tensor, nn
-
-import requests
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 from detectron2.projects.deeplab import add_deeplab_config
+from PIL import Image
+from torch import Tensor, nn
+
 from transformers.models.maskformer.feature_extraction_maskformer import MaskFormerFeatureExtractor
 from transformers.models.maskformer.modeling_maskformer import (
     MaskFormerConfig,
@@ -106,7 +106,6 @@ def setup_cfg(args: Args):
 
 class OriginalMaskFormerConfigToOursConverter:
     def __call__(self, original_config: object) -> MaskFormerConfig:
-
         model = original_config.MODEL
         mask_former = model.MASK_FORMER
         swin = model.SWIN
@@ -188,7 +187,7 @@ class OriginalMaskFormerCheckpointToOursConverter:
         self.config = config
 
     def pop_all(self, renamed_keys: List[Tuple[str, str]], dst_state_dict: StateDict, src_state_dict: StateDict):
-        for (src_key, dst_key) in renamed_keys:
+        for src_key, dst_key in renamed_keys:
             dst_state_dict[dst_key] = src_state_dict.pop(src_key)
 
     def replace_backbone(self, dst_state_dict: StateDict, src_state_dict: StateDict, config: MaskFormerConfig):
@@ -557,7 +556,6 @@ class OriginalMaskFormerCheckpointToOursConverter:
 
 def test(original_model, our_model: MaskFormerForInstanceSegmentation, feature_extractor: MaskFormerFeatureExtractor):
     with torch.no_grad():
-
         original_model = original_model.eval()
         our_model = our_model.eval()
 
@@ -583,7 +581,6 @@ def test(original_model, our_model: MaskFormerForInstanceSegmentation, feature_e
         for original_model_feature, our_model_feature in zip(
             original_model_backbone_features.values(), our_model_output.encoder_hidden_states
         ):
-
             assert torch.allclose(
                 original_model_feature, our_model_feature, atol=1e-3
             ), "The backbone features are not the same."
@@ -635,7 +632,6 @@ def get_name(checkpoint_file: Path):
 
 
 if __name__ == "__main__":
-
     parser = ArgumentParser(
         description="Command line to convert the original maskformers (with swin backbone) to our implementations."
     )
@@ -643,12 +639,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--checkpoints_dir",
         type=Path,
-        help="A directory containing the model's checkpoints. The directory has to have the following structure: <DIR_NAME>/<DATASET_NAME>/<CONFIG_NAME>.pkl",
+        help=(
+            "A directory containing the model's checkpoints. The directory has to have the following structure:"
+            " <DIR_NAME>/<DATASET_NAME>/<CONFIG_NAME>.pkl"
+        ),
     )
     parser.add_argument(
         "--configs_dir",
         type=Path,
-        help="A directory containing the model's configs, see detectron2 doc. The directory has to have the following structure: <DIR_NAME>/<DATASET_NAME>/<CONFIG_NAME>.yaml",
+        help=(
+            "A directory containing the model's configs, see detectron2 doc. The directory has to have the following"
+            " structure: <DIR_NAME>/<DATASET_NAME>/<CONFIG_NAME>.yaml"
+        ),
     )
     parser.add_argument(
         "--pytorch_dump_folder_path",
@@ -660,7 +662,10 @@ if __name__ == "__main__":
         "--maskformer_dir",
         required=True,
         type=Path,
-        help="A path to MaskFormer's original implementation directory. You can download from here: https://github.com/facebookresearch/MaskFormer",
+        help=(
+            "A path to MaskFormer's original implementation directory. You can download from here:"
+            " https://github.com/facebookresearch/MaskFormer"
+        ),
     )
 
     args = parser.parse_args()
@@ -681,7 +686,6 @@ if __name__ == "__main__":
     for config_file, checkpoint_file in OriginalMaskFormerCheckpointToOursConverter.using_dirs(
         checkpoints_dir, config_dir
     ):
-
         feature_extractor = OriginalMaskFormerConfigToFeatureExtractorConverter()(
             setup_cfg(Args(config_file=config_file))
         )
